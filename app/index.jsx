@@ -13,7 +13,7 @@ const RootLayout = () => {
     <View style={{ flex: 1, backgroundColor: '#161622' }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <SafeAreaView style={{ flex: 1, paddingHorizontal: 16, marginTop: 48 }}>
-          {/* Title Section */}
+     
           <View
           >
             <Text
@@ -38,28 +38,10 @@ const RootLayout = () => {
             </Text>
           </View>
 
-          {/* Introduction Section */}
-          <View
-           
-          >
-            <Text
-              style={{ color: 'white', fontSize: 18, fontWeight: '600', marginBottom: 8 }}
-            >
-              How It Works:
-            </Text>
-            <Text style={{ color: 'gray', fontSize: 14, lineHeight: 20 }}>
-              1. Discover matches based on shared interests and compatibility.
-            </Text>
-            <Text style={{ color: 'gray', fontSize: 14, lineHeight: 20 }}>
-              2. Chat for up to 10 minutes before deciding to match.
-            </Text>
-            <Text style={{ color: 'gray', fontSize: 14, lineHeight: 20 }}>
-              3. Unlock a new way of connecting genuinely.
-            </Text>
-          </View>
+        
 
           {/* Buttons Section */}
-          <View style={{ alignItems: 'center', marginBottom: 32 }}>
+          <View className='mt-20' style={{ alignItems: 'center', marginBottom: 32 }}>
             <TouchableOpacity
               onPress={() => router.push('/home')}
               style={{
@@ -96,16 +78,7 @@ const RootLayout = () => {
           <View
            
           >
-            <Text
-              style={{
-                textAlign: 'center',
-                color: 'white',
-                fontSize: 20,
-                fontWeight: 'bold',
-              }}
-            >
-              Ready to find your perfect match?
-            </Text>
+          
           </View>
         </SafeAreaView>
       </ScrollView>
