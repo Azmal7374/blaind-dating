@@ -1,85 +1,60 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { AntDesign,Ionicons } from '@expo/vector-icons';
-import CustomButton from '@/components/CustomButton';
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+import {
+  Text,
+  View,
+  ScrollView,
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
+import * as Animatable from "react-native-animatable";
+import CustomButton from "../components/CustomButton";
 
 const RootLayout = () => {
   const router = useRouter();
+  let Image_Http_URL = {
+    uri: "https://img.freepik.com/free-photo/young-friends-smiling-looking-tablet-pink_176420-7374.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#161622' }}>
+    <View style={{ flex: 1 }}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        <Animatable.Image
+          source={Image_Http_URL}
+          style={{ height: 350, resizeMode: "cover", margin: 5 }}
+          animation="fadeIn"
+          duration={1500}
+        />
+
         <SafeAreaView style={{ flex: 1, paddingHorizontal: 16, marginTop: 48 }}>
-     
-          <View
+          <Animatable.View
+            animation="fadeInUp"
+            duration={1500}
+            delay={500}
           >
-            <Text
-              style={{
-                textAlign: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: 36,
-              }}
-            >
-              Welcome to Blind Dating App
-            </Text>
-            <Text
-              style={{
-                textAlign: 'center',
-                color: 'gray',
-                fontSize: 16,
-                marginTop: 10,
-              }}
-            >
-              Where connections are based on personality, not appearances.
-            </Text>
-          </View>
+            <Text className="font-bold text-xl">Let's get closer 😊</Text>
+            <Text className="text-3xl mt-2">The best place to meet your future partner</Text>
+          </Animatable.View>
 
-        
-
-          {/* Buttons Section */}
-          <View className='mt-20' style={{ alignItems: 'center', marginBottom: 32 }}>
-            <TouchableOpacity
-              onPress={() => router.push('/home')}
-              style={{
-                backgroundColor: '#4CAF50',
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                borderRadius: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Ionicons name="home" size={24} color="white" style={{ marginRight: 8 }} />
-              <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Explore Home</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Call to Action */}
-          <View style={{ alignItems: 'center', marginBottom: 32 }}>
-            <TouchableOpacity   onPress={() => router.push('/sign-in')}
-              style={{
-                backgroundColor: '#4CAF50',
-                paddingVertical: 12,
-                paddingHorizontal: 24,
-                borderRadius: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}>
-   
-    <AntDesign name="user" size={24} ccolor="white" style={{ marginRight: 8 }}/>
-    <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>User</Text>
-            </TouchableOpacity>
-              
-                </View>
-          <View
-           
+          <Animatable.View
+            animation="fadeInUp"
+            duration={1200}
+            delay={1000}
+            style={{ padding: 4 }}
           >
-          
-          </View>
+            <CustomButton
+              title="Get Started"
+              handlePress={() => router.push("/sign-in")}
+              containerStyles="w-full mt-7"
+            />
+          </Animatable.View>
+          <CustomButton
+              title="Home"
+              handlePress={() => router.push("/home")}
+              containerStyles="w-full mt-7 mb-4"
+            />
         </SafeAreaView>
       </ScrollView>
       <StatusBar backgroundColor="#161622" style="light" />
