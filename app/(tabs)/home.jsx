@@ -12,177 +12,180 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable";
-import CustomButton from "@/components/CustomButton";
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+const { width: screenWidth } = Dimensions.get("window");
 
 const HomePage = () => {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const imageUrls = [
-    "https://img.freepik.com/free-photo/portrait-interesting-young-man-winter-clothes_158595-911.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
-    "https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
-    "https://img.freepik.com/free-photo/smiling-group-friends-outdoors_53876-65323.jpg",
-    "https://img.freepik.com/free-photo/handsome-happy-bearded-man_74855-2827.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
-    "https://img.freepik.com/free-photo/close-up-handsome-young-businessman-trendy-suit-smiling-standing-against-white-background_1258-64864.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
+  const profiles = [
+    {
+      name: "Jason Derulo",
+      occupation: "Dancer and Actress",
+      interests: ["Football", "Gym", "Movies"],
+      essentials: {
+        distance: "20 Km Distance",
+        height: "5.3 Feet",
+        education: "University of Dhaka",
+        location: "Mirpur, Dhaka",
+        languages: "Bangla, English",
+        gender: "Male",
+      },
+      image:
+        "https://img.freepik.com/free-photo/portrait-interesting-young-man-winter-clothes_158595-911.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
+    },
+    {
+      name: "John Doe",
+      occupation: "Musician",
+      interests: ["Music", "Traveling"],
+      essentials: {
+        distance: "15 Km Distance",
+        height: "5.8 Feet",
+        education: "University of XYZ",
+        location: "Banani, Dhaka",
+        languages: "Bangla, English, French",
+        gender: "Male",
+      },
+      image:
+        "https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
+    },
   ];
 
-  const toggleFullscreen = (index) => {
-    setCurrentIndex(index); // Update the current index
-    setIsFullscreen(true); // Enable fullscreen mode
-  };
-
-  const closeFullscreen = () => setIsFullscreen(false); // Exit fullscreen mode
-
-  const renderCarouselItem = ({ item, index }) => (
-    <TouchableOpacity onPress={() => toggleFullscreen(index)}>
-      <Animatable.View animation="zoomIn" duration={500} style={styles.imageContainer}>
-        <Image source={{ uri: item }} style={styles.image} />
-      </Animatable.View>
-    </TouchableOpacity>
+  const renderProfileCard = ({ item }) => (
+    <Animatable.View animation="fadeInUp" style={styles.cardContainer} className="">
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: item.image }} style={styles.profileImage} />
+        <View style={styles.iconContainer}>
+          <TouchableOpacity style={[styles.actionButton, styles.closeButton]}>
+            <Ionicons name="close" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, styles.loveButton]}>
+            <Ionicons name="heart" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.detailsContainer}>
+        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.occupation}>{item.occupation}</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Interests</Text>
+          <View style={styles.interestsContainer}>
+            {item.interests.map((interest, index) => (
+              <Text key={index} style={styles.interestTag}>
+                {interest}
+              </Text>
+            ))}
+          </View>
+        </View>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Essentials</Text>
+          {Object.values(item.essentials).map((essential, index) => (
+            <Text key={index} style={styles.essentialItem}>
+              {essential}
+            </Text>
+          ))}
+        </View>
+      </View>
+    </Animatable.View>
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      {isFullscreen ? (
-        <Animatable.View animation="fadeIn" style={styles.fullscreenContainer}>
-          <Image
-            source={{ uri: imageUrls[currentIndex] }}
-            style={styles.fullscreenImage}
-          />
-          <TouchableOpacity style={styles.closeButton} onPress={closeFullscreen}>
-            <Ionicons name="close" size={40} color="white" />
-          </TouchableOpacity>
-          <View style={styles.fullscreenTextContainer}>
-            <Animatable.Text animation="fadeInUp" style={styles.fullscreenText}>
-            John Doe 28
-            </Animatable.Text>
-            <Animatable.Text animation="fadeInUp" delay={200} style={styles.fullscreenText}>
-              Age: 28
-            </Animatable.Text>
-            <Animatable.Text animation="fadeInUp" delay={400} style={styles.fullscreenText}>
-            150 Centemeter
-            </Animatable.Text>
-            <Animatable.Text animation="fadeInUp" delay={600} style={styles.fullscreenText}>
-             CrowlAnd
-            </Animatable.Text>
-            <Animatable.Text animation="fadeInUp" delay={800} style={styles.fullscreenText}>
-             Music, Traveling
-            </Animatable.Text>
-          </View>
-        </Animatable.View>
-      ) : (
-        <SafeAreaView style={{ flex: 1, paddingHorizontal: 16, marginTop: 48 }}>
-          <FlatList
-            data={imageUrls}
-            renderItem={renderCarouselItem}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(_, index) => index.toString()}
-            pagingEnabled
-            onScroll={(e) => {
-              const newIndex = Math.round(
-                e.nativeEvent.contentOffset.x / screenWidth
-              );
-              setCurrentIndex(newIndex);
-            }}
-          />
-
-          {/* Icon Section */}
-          <Animatable.View animation="fadeInUp" style={styles.iconContainer}>
-            <Animatable.View animation="pulse" iterationCount="infinite">
-              <Ionicons
-                name="heart"
-                size={40}
-                color="#EC4899"
-                style={styles.icon}
-              />
-            </Animatable.View>
-            <Animatable.View animation="pulse" iterationCount="infinite" delay={200}>
-              <Ionicons
-                name="close-circle"
-                size={40}
-                color="#EC4899"
-                style={styles.icon}
-              />
-            </Animatable.View>
-            <Animatable.View animation="pulse" iterationCount="infinite" delay={400}>
-              <Ionicons
-                name="chatbubble-ellipses"
-                size={40}
-                color="#EC4899"
-                style={styles.icon}
-              />
-            </Animatable.View>
-            <Animatable.View animation="pulse" iterationCount="infinite" delay={600}>
-              <Ionicons
-                name="star"
-                size={40}
-                color="#EC4899"
-                style={styles.icon}
-              />
-            </Animatable.View>
-          </Animatable.View>
-        </SafeAreaView>
-      )}
-      <View style={{ width: "100%", alignItems: "center", marginTop: 24 }}>
-        <CustomButton
-          title="Go To Root Page"
-          handlePress={() => router.push("/")}
-          containerStyles="w-full mt-7 mb-4"
-        />
-      </View>
-    </View>
+    <SafeAreaView style={{ flex: 1 }}>
+      <FlatList
+        data={profiles}
+        renderItem={renderProfileCard}
+        keyExtractor={(_, index) => index.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        pagingEnabled
+        onScroll={(e) => {
+          const newIndex = Math.round(
+            e.nativeEvent.contentOffset.x / screenWidth
+          );
+          setCurrentIndex(newIndex);
+        }}
+      />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  imageContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  image: {
+  cardContainer: {
     width: screenWidth * 0.9,
-    height: 500,
     borderRadius: 12,
-    resizeMode: "cover",
-    marginBottom: 5,
+    marginHorizontal: screenWidth * 0.05,
   },
-  fullscreenContainer: {
-    flex: 1,
-    backgroundColor: "black",
+  imageContainer: {
     position: "relative",
   },
-  fullscreenImage: {
+  profileImage: {
     width: "100%",
-    height: "100%",
+    height: 300,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
     resizeMode: "cover",
   },
-  closeButton: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    zIndex: 1,
-  },
-  fullscreenTextContainer: {
-    position: "absolute",
-    bottom: 40,
-    left: 20,
-  },
-  fullscreenText: {
-    color: "white",
-    fontSize: 20,
-    marginBottom: 8,
-  },
   iconContainer: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
     flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 24,
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
   },
-  icon: {
-    marginHorizontal: 20,
+  actionButton: {
+    backgroundColor: "#EC4899",
+    padding: 16,
+    borderRadius: 50,
+  },
+  closeButton: {
+    alignSelf: "flex-start",
+  },
+  loveButton: {
+    alignSelf: "flex-start",
+  },
+  detailsContainer: {
+    padding: 16,
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F2937",
+  },
+  occupation: {
+    fontSize: 16,
+    color: "#4B5563",
+    marginVertical: 4,
+  },
+  sectionContainer: {
+    marginTop: 12,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#9CA3AF",
+    marginBottom: 4,
+  },
+  interestsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  interestTag: {
+    backgroundColor: "#EC4899",
+    color: "white",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    fontSize: 12,
+  },
+  essentialItem: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginVertical: 2,
   },
 });
 

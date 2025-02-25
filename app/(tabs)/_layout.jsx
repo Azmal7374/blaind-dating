@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
-import { AntDesign, Entypo, MaterialCommunityIcons } from "@expo/vector-icons";
+import { AntDesign, Entypo, FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { StatusBar } from 'expo-status-bar';
@@ -45,9 +45,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="message"
+        name="chatlist"
         options={{
-          title: 'Message',
+          title: 'Chat List',
           headerShown: false,
           tabBarIcon: ({ color }) => <AntDesign name="message1" size={24} color={color} />,
         }}
@@ -61,7 +61,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <AntDesign name="profile" size={24} color={color} />,
         }}
       />
-    </Tabs>
+
+<Tabs.Screen
+        name="match"
+        options={{
+          title: 'Match',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <FontAwesome5 name="user-friends" size={24} color={color} />
+          ,
+        }}
+      />    </Tabs>
     <StatusBar backgroundColor="#161622" style="light" />
     </>
   );
