@@ -30,6 +30,13 @@ const Profile = () => {
     setModalVisible(false);
   };
 
+  // Logout function
+  const handleLogout = () => {
+    // Here, you can clear authentication tokens or any relevant data
+    // For now, just redirecting to the home page (or login page)
+    router.push("/"); // Redirect to the home page
+  };
+
   return (
     <View className="flex-1">
       <SafeAreaView className="flex-1 px-4 my-12 justify-between">
@@ -42,6 +49,13 @@ const Profile = () => {
           />
           <Text className="text-black text-xl font-bold">Azmal Gazi, 24</Text>
           <Text className="text-gray-400 text-sm">Profile 99% complete</Text>
+          <TouchableOpacity
+          className="items-center mt-6"
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out-outline" size={30} color="#EC4899" />
+          <Text className="text-black text-sm mt-2">Logout</Text>
+        </TouchableOpacity>
         </View>
 
         <View className="flex-row justify-between">
@@ -119,6 +133,9 @@ const Profile = () => {
             </View>
           </Animatable.View>
         </Modal>
+
+        {/* Logout Button */}
+        
       </SafeAreaView>
     </View>
   );

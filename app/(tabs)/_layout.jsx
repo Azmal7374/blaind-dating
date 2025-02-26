@@ -33,6 +33,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="register"
+        options={{
+          title: 'Register',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons
+          name="flower-tulip"
+          size={24}
+          color={color}
+        />,
+        }}
+      />
+
+
+<Tabs.Screen
         name="about"
         options={{
           title: 'About',
@@ -44,6 +58,7 @@ export default function TabLayout() {
         />,
         }}
       />
+
       <Tabs.Screen
         name="chatlist"
         options={{
@@ -53,14 +68,7 @@ export default function TabLayout() {
         }}
       />
 
-<Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          headerShown: false,
-          tabBarIcon: ({ color }) => <AntDesign name="profile" size={24} color={color} />,
-        }}
-      />
+
 
 <Tabs.Screen
         name="match"
@@ -70,7 +78,17 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <FontAwesome5 name="user-friends" size={24} color={color} />
           ,
         }}
-      />    </Tabs>
+      />  
+      
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <AntDesign name="profile" size={24} color={color} />,
+        }}
+      />
+        </Tabs>
     <StatusBar backgroundColor="#161622" style="light" />
     </>
   );

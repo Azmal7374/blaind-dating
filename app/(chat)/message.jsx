@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet, FlatList, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
+import {Ionicons } from '@expo/vector-icons';
 
 const ChatInbox = () => {
   const [messages, setMessages] = useState([
@@ -48,7 +48,7 @@ const ChatInbox = () => {
   // Request permissions for media library access
   const requestPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
+    if (status == 'granted') {
       alert('Sorry, we need camera roll permissions to make this work!');
     }
   };
@@ -109,6 +109,8 @@ const ChatInbox = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
+
+
       <FlatList
         data={messages}
         renderItem={renderMessage}
@@ -150,7 +152,7 @@ const styles = StyleSheet.create({
   },
   myMessageContainer: {
     alignSelf: "flex-end",
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#EC4899",
   },
   messageText: {
     color: "#111827",
@@ -189,16 +191,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
   },
   sendButton: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#EC4899",
     padding: 12,
     borderRadius: 24,
   },
   mediaButton: {
-    backgroundColor: "#10B981",
+    backgroundColor: "#EC4899",
     padding: 12,
     borderRadius: 24,
     marginLeft: 8,
   },
 });
+
 
 export default ChatInbox;
