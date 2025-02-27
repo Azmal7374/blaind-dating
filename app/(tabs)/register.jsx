@@ -87,7 +87,7 @@ const RegisterScreen = () => {
     });
   
     try {
-      const response = await axios.post('http://localhost:5000/api/users/register', formData, {
+      const response = await axios.post('http://192.168.1.104:8000/api/users/register', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

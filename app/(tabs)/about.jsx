@@ -1,120 +1,192 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import axios from 'axios';
+import React, { useState } from "react";
+import { useRouter } from "expo-router";
+import {
+  Text,
+  View,
+  Image,
+  Dimensions,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import * as Animatable from "react-native-animatable";
 
-const Home = () => {
-  const [profiles, setProfiles] = useState([]);
-  const [loading, setLoading] = useState(true);
+const { width: screenWidth } = Dimensions.get("window");
 
-  const fetchProfiles = async () => {
-    try {
-      const response = await axios.get('https://jsonplaceholder.typicode.com/users');
-      const formattedProfiles = response.data.map((user) => ({
-        id: user.id,
-        name: user.name,
-        image: 'https://via.placeholder.com/150',
-        dob: '1990-01-01',
-        bio: `User from ${user.address.city}`,
-        location: user.address.city,
-      }));
-      setProfiles(formattedProfiles);
-    } catch (error) {
-      console.error('Error fetching profiles:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const HomePage = () => {
+  const router = useRouter();
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
+  const profiles = [
+    {
+      name: "Jason Derulo",
+      occupation: "Dancer and Actress",
+      interests: ["Football", "Gym", "Movies"],
+      essentials: {
+        distance: "20 Km Distance",
+        height: "5.3 Feet",
+        education: "University of Dhaka",
+        location: "Mirpur, Dhaka",
+        languages: "Bangla, English",
+        gender: "Male",
+      },
+      image:
+        "https://img.freepik.com/free-photo/portrait-interesting-young-man-winter-clothes_158595-911.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
+    },
+    {
+      name: "John Doe",
+      occupation: "Musician",
+      interests: ["Music", "Traveling"],
+      essentials: {
+        distance: "15 Km Distance",
+        height: "5.8 Feet",
+        education: "University of XYZ",
+        location: "Banani, Dhaka",
+        languages: "Bangla, English, French",
+        gender: "Male",
+      },
+      image:
+        "https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
+    },
+  ];
 
-  const renderProfile = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <Text style={styles.name}>{item.name}</Text>
-      <Text style={styles.bio}>{item.bio}</Text>
-      <Text style={styles.dob}>DOB: {item.dob}</Text>
-      <Text style={styles.location}>Location: {item.location}</Text>
-    </View>
+  const renderProfileCard = ({ item }) => (
+    <Animatable.View animation="fadeInUp" style={styles.cardContainer} className="">
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: item.image }} style={styles.profileImage} />
+        <View style={styles.iconContainer}>
+          <TouchableOpacity style={[styles.actionButton, styles.closeButton]}>
+            <Ionicons name="close" size={30} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.actionButton, styles.loveButton]}>
+            <Ionicons name="heart" size={30} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.detailsContainer}>
+        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.occupation}>{item.occupation}</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Interests</Text>
+          <View style={styles.interestsContainer}>
+            {item.interests.map((interest, index) => (
+              <Text key={index} style={styles.interestTag}>
+                {interest}
+              </Text>
+            ))}
+          </View>
+        </View>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Essentials</Text>
+          {Object.values(item.essentials).map((essential, index) => (
+            <Text key={index} style={styles.essentialItem}>
+              {essential}
+            </Text>
+          ))}
+        </View>
+      </View>
+    </Animatable.View>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00ff00" />
-        <Text style={styles.loadingText}>Loading profiles...</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Profiles</Text>
+    <SafeAreaView style={{ flex: 1 }}>
       <FlatList
         data={profiles}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderProfile}
+        renderItem={renderProfileCard}
+        keyExtractor={(_, index) => index.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        pagingEnabled
+        onScroll={(e) => {
+          const newIndex = Math.round(
+            e.nativeEvent.contentOffset.x / screenWidth
+          );
+          setCurrentIndex(newIndex);
+        }}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
+  cardContainer: {
+    width: screenWidth * 0.9,
+    borderRadius: 12,
+    marginHorizontal: screenWidth * 0.05,
+  },
+  imageContainer: {
+    position: "relative",
+  },
+  profileImage: {
+    width: "100%",
+    height: 300,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    resizeMode: "cover",
+  },
+  iconContainer: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  actionButton: {
+    backgroundColor: "#EC4899",
     padding: 16,
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: '#333',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  image: {
-    width: 100,
-    height: 100,
     borderRadius: 50,
-    marginBottom: 8,
+  },
+  closeButton: {
+    alignSelf: "flex-start",
+  },
+  loveButton: {
+    alignSelf: "flex-start",
+  },
+  detailsContainer: {
+    padding: 16,
   },
   name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F2937",
   },
-  bio: {
+  occupation: {
+    fontSize: 16,
+    color: "#4B5563",
+    marginVertical: 4,
+  },
+  sectionContainer: {
+    marginTop: 12,
+  },
+  sectionTitle: {
     fontSize: 14,
-    color: '#ccc',
+    fontWeight: "bold",
+    color: "#9CA3AF",
     marginBottom: 4,
   },
-  dob: {
+  interestsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  interestTag: {
+    backgroundColor: "#EC4899",
+    color: "white",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
+    fontSize: 12,
+  },
+  essentialItem: {
     fontSize: 14,
-    color: '#ccc',
-  },
-  location: {
-    fontSize: 14,
-    color: '#999',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#ccc',
+    color: "#6B7280",
+    marginVertical: 2,
   },
 });
 
-export default Home;
+export default HomePage;

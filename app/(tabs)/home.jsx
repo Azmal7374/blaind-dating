@@ -1,167 +1,272 @@
-import React, { useState } from "react";
-import { useRouter } from "expo-router";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Text,
   View,
+  Text,
   Image,
-  Dimensions,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
+  Alert,
+  Share,
+  ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import * as Animatable from "react-native-animatable";
+import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
+import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
 
-const { width: screenWidth } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
-const HomePage = () => {
-  const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
+const TabHome = () => {
+  const [users, setUsers] = useState([]);
+  const [currentUserIndex, setCurrentUserIndex] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [likedUsers, setLikedUsers] = useState([]);
+  const [dislikedUsers, setDislikedUsers] = useState([]);
+  const imageRef = useRef(null);
 
-  const profiles = [
-    {
-      name: "Jason Derulo",
-      occupation: "Dancer and Actress",
-      interests: ["Football", "Gym", "Movies"],
-      essentials: {
-        distance: "20 Km Distance",
-        height: "5.3 Feet",
-        education: "University of Dhaka",
-        location: "Mirpur, Dhaka",
-        languages: "Bangla, English",
-        gender: "Male",
-      },
-      image:
-        "https://img.freepik.com/free-photo/portrait-interesting-young-man-winter-clothes_158595-911.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
-    },
-    {
-      name: "John Doe",
-      occupation: "Musician",
-      interests: ["Music", "Traveling"],
-      essentials: {
-        distance: "15 Km Distance",
-        height: "5.8 Feet",
-        education: "University of XYZ",
-        location: "Banani, Dhaka",
-        languages: "Bangla, English, French",
-        gender: "Male",
-      },
-      image:
-        "https://img.freepik.com/free-photo/young-bearded-man-with-striped-shirt_273609-5677.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
-    },
-  ];
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const renderProfileCard = ({ item }) => (
-    <Animatable.View animation="fadeInUp" style={styles.cardContainer} className="">
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: item.image }} style={styles.profileImage} />
-        <View style={styles.iconContainer}>
-          <TouchableOpacity style={[styles.actionButton, styles.closeButton]}>
-            <Ionicons name="close" size={30} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.loveButton]}>
-            <Ionicons name="heart" size={30} color="white" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={styles.detailsContainer}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.occupation}>{item.occupation}</Text>
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Interests</Text>
-          <View style={styles.interestsContainer}>
-            {item.interests.map((interest, index) => (
-              <Text key={index} style={styles.interestTag}>
-                {interest}
-              </Text>
-            ))}
-          </View>
-        </View>
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Essentials</Text>
-          {Object.values(item.essentials).map((essential, index) => (
-            <Text key={index} style={styles.essentialItem}>
-              {essential}
-            </Text>
-          ))}
-        </View>
-      </View>
-    </Animatable.View>
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("http://192.168.1.103:8000/api/users/");
+      setUsers(response.data.users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const currentUser = users[currentUserIndex];
+  const currentImage = currentUser?.profile_pics?.[currentImageIndex]
+    ? `http://192.168.1.103:8000/${currentUser.profile_pics[
+        currentImageIndex
+      ].replace(/\\/g, "/")}`
+    : "https://via.placeholder.com/150";
+
+  const handleLike = () => {
+    setLikedUsers([...likedUsers, currentUser._id]);
+    moveToNextImage();
+  };
+
+  const handleDislike = () => {
+    setDislikedUsers([...dislikedUsers, currentUser._id]);
+    moveToNextUser();
+  };
+
+  const handleDownload = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "You need to grant storage permissions to download images."
+        );
+        return;
+      }
+
+      const fileUri = `${FileSystem.cacheDirectory}${
+        currentUser.name || "image"
+      }.jpg`;
+      const downloadedImage = await FileSystem.downloadAsync(
+        currentImage,
+        fileUri
+      );
+      await MediaLibrary.createAssetAsync(downloadedImage.uri);
+
+      Alert.alert("Download Complete", "Image has been saved to your gallery.");
+    } catch (error) {
+      console.error("Error downloading image:", error);
+      Alert.alert(
+        "Download Failed",
+        "There was an error downloading the image."
+      );
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Check out this profile: ${currentImage}`,
+      });
+    } catch (error) {
+      Alert.alert("Users End", "No More SUers Remaining!!");
+    }
+  };
+
+  const moveToNextUser = () => {
+    if (currentUserIndex < users.length - 1) {
+      setCurrentUserIndex(currentUserIndex + 1);
+      setCurrentImageIndex(0);
+    } else {
+      console.log("No more users to show.");
+    }
+  };
+
+  const moveToNextImage = () => {
+    if (currentImageIndex < currentUser.profile_pics.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+    } else {
+      moveToNextUser();
+    }
+  };
+
+  const filteredUsers = users.filter(
+    (user) =>
+      !likedUsers.includes(user._id) && !dislikedUsers.includes(user._id)
   );
 
+  useEffect(() => {
+    if (imageRef.current) {
+      imageRef.current.fadeIn(500);
+    }
+  }, [currentUserIndex, currentImageIndex]);
+
+  if (filteredUsers.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.noUsersText}>No more users to show.</Text>
+      </View>
+    );
+  }
+
+  const getDetailsForImage = (index, user) => {
+    const interests = Array.isArray(user.interests)
+      ? user.interests
+      : user.interests || "No interests";
+    const personalityTraits = Array.isArray(user.personalityTraits)
+      ? user.personalityTraits
+      : user.personalityTraits || "No personality traits";
+    switch (index) {
+      case 0:
+        return (
+          <View >
+            <Text style={styles.sectionTitle}>Interests</Text>
+            <View style={styles.interestsContainer}>
+              {interests.map((interest, index) => (
+                <Text key={index} style={styles.interestTag}>
+                  {interest}
+                </Text>
+              ))}
+            </View>
+          </View>
+        );
+      case 1:
+        return (
+          <View >
+            <Text  style={styles.sectionTitle}> {user?.distance}160  centemeter </Text>
+            <Text style={styles.sectionTitle}>
+              {user.university || "University Of Croland"}
+            </Text>
+          </View>
+        );
+      case 2:
+        return (
+          <View>
+            <Text style={styles.sectionTitle}>Personality Traits</Text>
+            <View style={styles.interestsContainer}>
+              {personalityTraits.map((trait, index) => (
+                  <Text  key={index} style={styles.interestTag}>{trait}</Text>
+              ))}
+            </View>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <FlatList
-        data={profiles}
-        renderItem={renderProfileCard}
-        keyExtractor={(_, index) => index.toString()}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled
-        onScroll={(e) => {
-          const newIndex = Math.round(
-            e.nativeEvent.contentOffset.x / screenWidth
-          );
-          setCurrentIndex(newIndex);
-        }}
-      />
-    </SafeAreaView>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <View style={styles.container}>
+        <Animatable.View ref={imageRef} style={styles.imageContainer}>
+          <Image className="mt-8" source={{ uri: currentImage }} style={styles.storyImage} />
+        </Animatable.View>
+
+        <View style={styles.iconsContainer} className="flex justify-center items-center">
+          <TouchableOpacity onPress={handleDislike} style={styles.iconButton}>
+            <FontAwesome name="times-circle" size={40} color="#EC4899" />
+          </TouchableOpacity>
+
+         
+
+          <TouchableOpacity onPress={handleShare} style={styles.iconButton}>
+            <Ionicons name="share-social" size={40} color="#EC4899" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleLike} style={styles.iconButton}>
+            <FontAwesome name="heart" size={40} color="#EC4899" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleDownload} style={styles.iconButton}>
+            <Feather name="download" size={40} color="#EC4899" />
+          </TouchableOpacity>
+
+        </View>
+
+        <View style={styles.detailsContainer}>
+          <Text style={styles.name}>{currentUser?.name}</Text>
+          <Text className="text-start">
+            {getDetailsForImage(currentImageIndex, currentUser)}
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    width: screenWidth * 0.9,
-    borderRadius: 12,
-    marginHorizontal: screenWidth * 0.05,
+  container: {
+    flex: 1,
+    
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 20,
   },
   imageContainer: {
-    position: "relative",
+    width: width * 1,
+    height: height * 0.55,
+    marginBottom: 20,
+    borderRadius: 20,
+    overflow: "hidden",
+    elevation: 5,
   },
-  profileImage: {
-    width: "100%",
-    height: 300,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    resizeMode: "cover",
-  },
-  iconContainer: {
-    position: "absolute",
+  storyImage: {
     width: "100%",
     height: "100%",
+    resizeMode: "cover",
+  },
+  iconsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
+    justifyContent: "space-around",
+    width: "80%",
+    marginBottom: 20,
   },
-  actionButton: {
-    backgroundColor: "#EC4899",
-    padding: 16,
-    borderRadius: 50,
-  },
-  closeButton: {
-    alignSelf: "flex-start",
-  },
-  loveButton: {
-    alignSelf: "flex-start",
+  iconButton: {
+    // alignItems: 'center',
+    padding: 10,
   },
   detailsContainer: {
-    padding: 16,
+    marginTop: 10,
+    paddingHorizontal: 20,
   },
   name: {
-    fontSize: 20,
     fontWeight: "bold",
-    color: "#1F2937",
+    fontSize: 20,
+    marginBottom: 8,
+    color: "#333",
   },
-  occupation: {
-    fontSize: 16,
-    color: "#4B5563",
-    marginVertical: 4,
+
+  noUsersText: {
+    fontSize: 18,
+    color: "#777",
   },
-  sectionContainer: {
-    marginTop: 12,
-  },
+
   sectionTitle: {
     fontSize: 14,
     fontWeight: "bold",
@@ -182,11 +287,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 12,
   },
-  essentialItem: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginVertical: 2,
-  },
 });
 
-export default HomePage;
+export default TabHome;

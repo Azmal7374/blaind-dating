@@ -12,7 +12,6 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
-
 const upload = multer({ storage });
 
 export const createUser = [
@@ -42,7 +41,6 @@ export const createUser = [
         return res.status(400).json({ error: 'All required fields must be filled.' });
       }
 
-      // Create a new user
       const user = new User({
         name,
         email,
@@ -61,6 +59,7 @@ export const createUser = [
 
       res.status(201).json({ message: 'User created successfully', user });
     } catch (err) {
+      console.error(err); 
       if (err.name === 'ValidationError') {
         return res.status(400).json({ error: err.message });
       }

@@ -2,8 +2,10 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import * as Animatable from "react-native-animatable";
 import { AntDesign } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const mockData = {
+
   user1: {
     name: "Alice",
     image: "https://img.freepik.com/premium-photo/portrait-beautiful-caucasian-girl-young-attractive-stylish-elegant-brunette-woman-with-long-hair-red-beret-gloves-blue-coat-looking-camera-outdoors-walking-beach-ocean_157823-1786.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
@@ -17,6 +19,7 @@ const mockData = {
 const MatchScreen = ({ onMessage, onExplore }) => {
   const user1 = mockData.user1;
   const user2 = mockData.user2;
+  const route=useRouter()
 
   if (!user1 || !user2) {
     return (
@@ -67,7 +70,7 @@ const MatchScreen = ({ onMessage, onExplore }) => {
       </Animatable.Text>
 
       <Animatable.View animation="zoomIn" delay={1000}>
-        <TouchableOpacity style={styles.messageButton} onPress={onMessage}>
+        <TouchableOpacity style={styles.messageButton} onPress={() => route.push('/message')}>
           <Text style={styles.buttonText}>Message</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.exploreButton} onPress={onExplore}>
