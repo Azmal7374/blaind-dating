@@ -32,7 +32,7 @@ const TabHome = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://192.168.1.103:8000/api/users/");
+      const response = await axios.get("http://192.168.1.102:8000/api/users/");
       setUsers(response.data.users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -41,7 +41,7 @@ const TabHome = () => {
 
   const currentUser = users[currentUserIndex];
   const currentImage = currentUser?.profile_pics?.[currentImageIndex]
-    ? `http://192.168.1.103:8000/${currentUser.profile_pics[
+    ? `http://192.168.1.102:8000/${currentUser.profile_pics[
         currentImageIndex
       ].replace(/\\/g, "/")}`
     : "https://via.placeholder.com/150";

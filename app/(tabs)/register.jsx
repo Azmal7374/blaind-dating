@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import axios from 'axios';
 import * as Animatable from 'react-native-animatable';
 import { MaterialIcons } from '@expo/vector-icons';
 import CustomButton from '@/components/CustomButton';
+import { supabase } from '../../supabase';
+
 
 const allInterests = [
   'Travel', 'Music', 'Sports', 'Movies', 'Reading', 'Cooking', 'Gaming', 'Art',
@@ -36,7 +38,8 @@ const RegisterScreen = () => {
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showDateModal, setShowDateModal] = useState(false);
   const [profilePics, setProfilePics] = useState([]);
-
+  const [userEmail, setUserEmail] = useState(null);
+  const [loading, setLoading] = useState(true); 
   const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString());
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
@@ -87,7 +90,7 @@ const RegisterScreen = () => {
     });
   
     try {
-      const response = await axios.post('http://192.168.1.104:8000/api/users/register', formData, {
+      const response = await axios.post('http://192.168.1.102:8000/api/users/register', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -119,6 +122,31 @@ const RegisterScreen = () => {
     }
   };
 
+
+
+    useEffect(() => {
+      const fetchUserEmail = async () => {
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+  
+          if (error) throw error;
+  
+          if (session) {
+            setUserEmail(session.user.email); // Set the user's email
+          } else {
+            console.log("No user is currently logged in.");
+          }
+        } catch (error) {
+          console.error("Error fetching user session:", error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchUserEmail();
+    }, []);
+  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Name Input */}
@@ -136,7 +164,7 @@ const RegisterScreen = () => {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          value={email}
+          value={userEmail}
           onChangeText={setEmail}
           keyboardType="email-address"
         />

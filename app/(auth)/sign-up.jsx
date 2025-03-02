@@ -3,20 +3,26 @@ import { useRouter } from "expo-router";
 import { View, Text, Alert, Image, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Animatable from "react-native-animatable";
+import { Ionicons } from "@expo/vector-icons";
 
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
+import { supabase } from '../../supabase';
 
 const SignUp = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword); // Toggle password visibility
+  };
 
   const handleSignUp = async () => {
-    if (!username.trim()) {
-      Alert.alert("Error", "Username is required");
+    if (!email.trim()) {
+      Alert.alert("Error", "Email is required");
       return;
     }
     if (password !== confirmPassword) {
@@ -24,12 +30,21 @@ const SignUp = () => {
       return;
     }
     try {
-      const result = await createUser(form.email, form.password, form.username);
-      setUser(result);
+      if (!supabase || !supabase.auth) {
+        throw new Error('Supabase client is not initialized.');
+      }
 
-      router.replace("/home");
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      Alert.alert('Success', 'Check your email for the confirmation link!');
+      router.push('/sign-in');
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -56,13 +71,6 @@ const SignUp = () => {
           </Animatable.Text>
 
           <FormField
-            title="UserName"
-            value={username}
-            handleChangeText={setUsername}
-            otherStyles="mt-7"
-            keyboardType="default"
-          />
-          <FormField
             title="Email"
             value={email}
             handleChangeText={setEmail}
@@ -75,7 +83,9 @@ const SignUp = () => {
             handleChangeText={setPassword}
             otherStyles="mt-7"
             keyboardType="default"
-            secureTextEntry
+            secureTextEntry={!showPassword} // Toggle secureTextEntry
+            rightIcon={showPassword ? "eye-off" : "eye"} // Add eye icon
+            handleRightIconPress={toggleShowPassword} // Add toggle functionality
           />
           <FormField
             title="Confirm Password"
@@ -83,12 +93,14 @@ const SignUp = () => {
             handleChangeText={setConfirmPassword}
             otherStyles="mt-7"
             keyboardType="default"
-            secureTextEntry
+            secureTextEntry={!showPassword} // Toggle secureTextEntry
+            rightIcon={showPassword ? "eye-off" : "eye"} // Add eye icon
+            handleRightIconPress={toggleShowPassword} // Add toggle functionality
           />
 
           <Animatable.View animation="fadeInUp" duration={1500}>
             <CustomButton
-              title="Get Started"
+              title="Sign Up"
               handlePress={handleSignUp}
               containerStyles="w-full mt-7 bg-pink-500 rounded-lg py-3 shadow-lg"
             />

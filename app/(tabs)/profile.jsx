@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   View,
@@ -7,18 +7,45 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable"; // Import Animatable
+import { supabase } from '../../supabase';
 
 const Profile = () => {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
+  const [userEmail, setUserEmail] = useState(null); // State for user email
+  const [loading, setLoading] = useState(true); // State for loading
 
   let Image_Http_URL = {
     uri: "https://img.freepik.com/premium-photo/man-with-headphones_1368-70297.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
   };
+
+  // Fetch the current user's email
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        if (session) {
+          setUserEmail(session.user.email); // Set the user's email
+        } else {
+          console.log("No user is currently logged in.");
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserEmail();
+  }, []);
 
   // Open modal
   const handleModalOpen = () => {
@@ -31,11 +58,23 @@ const Profile = () => {
   };
 
   // Logout function
-  const handleLogout = () => {
-    // Here, you can clear authentication tokens or any relevant data
-    // For now, just redirecting to the home page (or login page)
-    router.push("/"); // Redirect to the home page
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      router.push("/sign-in"); // Redirect to Sign In screen
+    } catch (error) {
+      console.error('Error signing out:', error.message);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1">
@@ -49,13 +88,18 @@ const Profile = () => {
           />
           <Text className="text-black text-xl font-bold">Azmal Gazi, 24</Text>
           <Text className="text-gray-400 text-sm">Profile 99% complete</Text>
+          {userEmail && (
+            <Text className="text-gray-500 text-sm mt-2">
+              Logged in as: {userEmail}
+            </Text>
+          )}
           <TouchableOpacity
-          className="items-center mt-6"
-          onPress={handleLogout}
-        >
-          <Ionicons name="log-out-outline" size={30} color="#EC4899" />
-          <Text className="text-black text-sm mt-2">Logout</Text>
-        </TouchableOpacity>
+            className="items-center mt-6"
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out-outline" size={30} color="#EC4899" />
+            <Text className="text-black text-sm mt-2">Logout</Text>
+          </TouchableOpacity>
         </View>
 
         <View className="flex-row justify-between">
@@ -133,9 +177,6 @@ const Profile = () => {
             </View>
           </Animatable.View>
         </Modal>
-
-        {/* Logout Button */}
-        
       </SafeAreaView>
     </View>
   );

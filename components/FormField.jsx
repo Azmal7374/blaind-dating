@@ -1,40 +1,33 @@
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image } from "react-native";
-
-import { icons } from "../constants/icons";
+import React from "react";
+import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 const FormField = ({
   title,
   value,
-  placeholder,
   handleChangeText,
   otherStyles,
-  ...props
+  keyboardType,
+  secureTextEntry,
+  rightIcon,
+  handleRightIconPress,
 }) => {
-  const [showPassword, setShowPassword] = useState(false);
-
   return (
     <View className={`space-y-2 ${otherStyles}`}>
-      <Text className="text-base text-gray-500 font-pmedium">{title}</Text>
-
-      <View className="w-full h-16 px-4 bg-slate-500 rounded-lg border-2 border-gray-300 focus:border-secondary flex flex-row items-center">
+      <Text className="text-base text-gray-500">{title}</Text>
+      <View className="flex-row items-center w-full h-16 px-4 bg-gray-100 rounded-lg border border-gray-200 focus:border-pink-500">
         <TextInput
-          className="flex-1 text-white font-psemibold text-base"
+          className="flex-1 text-black text-base"
           value={value}
-          placeholder={placeholder}
-          placeholderTextColor="#7B7B8B"
           onChangeText={handleChangeText}
-          secureTextEntry={title === "Password" && !showPassword}
-          {...props}
+          placeholder={title}
+          placeholderTextColor="#9CA3AF"
+          keyboardType={keyboardType}
+          secureTextEntry={secureTextEntry}
         />
-
-        {title === "Password" && (
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Image
-              source={!showPassword ? icons?.eye : icons?.eyeHide}
-              className="w-6 h-6"
-              resizeMode="contain"
-            />
+        {rightIcon && (
+          <TouchableOpacity onPress={handleRightIconPress}>
+            <Ionicons name={rightIcon} size={24} color="#6B7280" />
           </TouchableOpacity>
         )}
       </View>

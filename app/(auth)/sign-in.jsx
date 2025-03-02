@@ -1,23 +1,24 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import {
-  View,
-  Text,
-  Alert,
-  Image,
-  ScrollView,
-} from "react-native";
+import { View, Text, Alert, Image, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Animatable from "react-native-animatable";
+import { Ionicons } from "@expo/vector-icons";
 
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
+import { supabase } from "../../supabase";
 
 const SignIn = () => {
   const router = useRouter();
   const [isSubmitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword); // Toggle password visibility
+  };
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -26,10 +27,20 @@ const SignIn = () => {
     }
 
     setSubmitting(true);
-
     try {
-      Alert.alert("Success", "User signed in successfully");
-      router.replace("/home");
+      if (!supabase || !supabase.auth) {
+        throw new Error("Supabase client is not initialized.");
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      Alert.alert("Success", "Signed in successfully!");
+      router.push("/home");
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
@@ -72,14 +83,17 @@ const SignIn = () => {
             handleChangeText={setPassword}
             otherStyles="mt-7"
             keyboardType="default"
-            secureTextEntry
+            secureTextEntry={!showPassword} // Toggle secureTextEntry
+            rightIcon={showPassword ? "eye-off" : "eye"} // Add eye icon
+            handleRightIconPress={toggleShowPassword} // Add toggle functionality
           />
 
           <Animatable.View animation="fadeInUp" duration={1500}>
             <CustomButton
-              title="Get Started"
+              title="Sign In"
               handlePress={handleSignIn}
               containerStyles="w-full mt-7 bg-pink-500 rounded-lg py-3 shadow-lg"
+              isLoading={isSubmitting}
             />
           </Animatable.View>
 
