@@ -1,3 +1,4 @@
+// app/sign-in.js
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, Alert, Image, ScrollView } from "react-native";
@@ -7,17 +8,18 @@ import { Ionicons } from "@expo/vector-icons";
 
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
-import { supabase } from "../../supabase";
+import { useAuth } from "../../lib/AuthContext";
 
 const SignIn = () => {
   const router = useRouter();
   const [isSubmitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
 
   const toggleShowPassword = () => {
-    setShowPassword(!showPassword); // Toggle password visibility
+    setShowPassword(!showPassword);
   };
 
   const handleSignIn = async () => {
@@ -28,19 +30,9 @@ const SignIn = () => {
 
     setSubmitting(true);
     try {
-      if (!supabase || !supabase.auth) {
-        throw new Error("Supabase client is not initialized.");
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
+      await login(email, password);
       Alert.alert("Success", "Signed in successfully!");
-      router.push("/home");
+      router.push("/register");
     } catch (error) {
       Alert.alert("Error", error.message);
     } finally {
@@ -48,15 +40,11 @@ const SignIn = () => {
     }
   };
 
-  let Image_Http_URL = {
-    uri: "https://img.freepik.com/premium-photo/asian-indian-young-indian-people-eating-restaurant-evening_466689-13660.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView>
         <Animatable.Image
-          source={Image_Http_URL}
+          source={{ uri: "https://img.freepik.com/premium-photo/asian-indian-young-indian-people-eating-restaurant-evening_466689-13660.jpg" }}
           style={{ height: 350, resizeMode: "cover", margin: 5 }}
           animation="fadeIn"
           duration={1500}
@@ -83,9 +71,9 @@ const SignIn = () => {
             handleChangeText={setPassword}
             otherStyles="mt-7"
             keyboardType="default"
-            secureTextEntry={!showPassword} // Toggle secureTextEntry
-            rightIcon={showPassword ? "eye-off" : "eye"} // Add eye icon
-            handleRightIconPress={toggleShowPassword} // Add toggle functionality
+            secureTextEntry={!showPassword}
+            rightIcon={showPassword ? "eye-off" : "eye"}
+            handleRightIconPress={toggleShowPassword}
           />
 
           <Animatable.View animation="fadeInUp" duration={1500}>

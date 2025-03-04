@@ -1,4 +1,5 @@
 import User from '../models/user.js'; 
+import Match from '../models/match.js'; 
 import multer from 'multer';
 import path from 'path';
 
@@ -106,6 +107,34 @@ export const updateUser = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     res.status(200).json(user);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+
+
+
+export const getUsers = async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+    // Fetch current user
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch profiles excluding already liked/passed users
+    const matches = await Match.find({ user1: userId });
+    const seenUserIds = matches.map(match => match.user2);
+
+    const users = await User.find({
+      _id: { $ne: userId, $nin: seenUserIds }, // Exclude current user and seen profiles
+      looking_for: currentUser.gender, // Filter based on preferences
+    });
+
+    res.status(200).json({ users });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

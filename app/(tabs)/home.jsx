@@ -9,30 +9,35 @@ import {
   Alert,
   Share,
   ScrollView,
+  Modal,
 } from "react-native";
 import axios from "axios";
 import * as Animatable from "react-native-animatable";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
-const TabHome = () => {
+const TabHome = ({ userId }) => {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [likedUsers, setLikedUsers] = useState([]);
   const [dislikedUsers, setDislikedUsers] = useState([]);
+  const [selectedInterests, setSelectedInterests] = useState([]);
+  const [isInterestModalVisible, setIsInterestModalVisible] = useState(false);
   const imageRef = useRef(null);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [userId]);
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://192.168.1.102:8000/api/users/");
+      const response = await axios.get(`http://192.168.1.102:8000/api/users?userId=${userId}`);
       setUsers(response.data.users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -46,14 +51,32 @@ const TabHome = () => {
       ].replace(/\\/g, "/")}`
     : "https://via.placeholder.com/150";
 
-  const handleLike = () => {
-    setLikedUsers([...likedUsers, currentUser._id]);
-    moveToNextImage();
+  const handleLike = async () => {
+    try {
+      await axios.post("http://192.168.1.102:8000/api/matches", {
+        user1: userId,
+        user2: currentUser._id,
+        action: "like",
+      });
+      setLikedUsers([...likedUsers, currentUser._id]);
+      moveToNextImage();
+    } catch (error) {
+      console.error("Error liking user:", error);
+    }
   };
 
-  const handleDislike = () => {
-    setDislikedUsers([...dislikedUsers, currentUser._id]);
-    moveToNextUser();
+  const handleDislike = async () => {
+    try {
+      await axios.post("http://192.168.1.102:8000/api/matches", {
+        user1: userId,
+        user2: currentUser._id,
+        action: "pass",
+      });
+      setDislikedUsers([...dislikedUsers, currentUser._id]);
+      moveToNextUser();
+    } catch (error) {
+      console.error("Error disliking user:", error);
+    }
   };
 
   const handleDownload = async () => {
@@ -92,7 +115,7 @@ const TabHome = () => {
         message: `Check out this profile: ${currentImage}`,
       });
     } catch (error) {
-      Alert.alert("Users End", "No More SUers Remaining!!");
+      Alert.alert("Users End", "No More Users Remaining!!");
     }
   };
 
@@ -124,6 +147,34 @@ const TabHome = () => {
     }
   }, [currentUserIndex, currentImageIndex]);
 
+  const handleInterestSelect = (interest) => {
+    if (selectedInterests.includes(interest)) {
+      setSelectedInterests(selectedInterests.filter((item) => item !== interest));
+    } else {
+      if (selectedInterests.length < 5) {
+        setSelectedInterests([...selectedInterests, interest]);
+      } else {
+        Alert.alert("Maximum Reached", "You can select up to 5 interests.");
+      }
+    }
+  };
+
+  const openInterestModal = () => {
+    setIsInterestModalVisible(true);
+  };
+
+  const closeInterestModal = () => {
+    setIsInterestModalVisible(false);
+  };
+
+  const filterUsersByInterests = () => {
+    if (selectedInterests.length === 0) return users;
+
+    return users.filter((user) =>
+      selectedInterests.some((interest) => user.interests.includes(interest))
+    );
+  };
+
   if (filteredUsers.length === 0) {
     return (
       <View style={styles.container}>
@@ -142,7 +193,7 @@ const TabHome = () => {
     switch (index) {
       case 0:
         return (
-          <View >
+          <View>
             <Text style={styles.sectionTitle}>Interests</Text>
             <View style={styles.interestsContainer}>
               {interests.map((interest, index) => (
@@ -155,8 +206,8 @@ const TabHome = () => {
         );
       case 1:
         return (
-          <View >
-            <Text  style={styles.sectionTitle}> {user?.distance}160  centemeter </Text>
+          <View>
+            <Text style={styles.sectionTitle}> {user?.distance}160  centimeter </Text>
             <Text style={styles.sectionTitle}>
               {user.university || "University Of Croland"}
             </Text>
@@ -168,7 +219,7 @@ const TabHome = () => {
             <Text style={styles.sectionTitle}>Personality Traits</Text>
             <View style={styles.interestsContainer}>
               {personalityTraits.map((trait, index) => (
-                  <Text  key={index} style={styles.interestTag}>{trait}</Text>
+                <Text key={index} style={styles.interestTag}>{trait}</Text>
               ))}
             </View>
           </View>
@@ -190,7 +241,9 @@ const TabHome = () => {
             <FontAwesome name="times-circle" size={40} color="#EC4899" />
           </TouchableOpacity>
 
-         
+          <TouchableOpacity onPress={openInterestModal} style={styles.iconButton}>
+            <Ionicons name="filter" size={40} color="#EC4899" />
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={handleShare} style={styles.iconButton}>
             <Ionicons name="share-social" size={40} color="#EC4899" />
@@ -203,7 +256,6 @@ const TabHome = () => {
           <TouchableOpacity onPress={handleDownload} style={styles.iconButton}>
             <Feather name="download" size={40} color="#EC4899" />
           </TouchableOpacity>
-
         </View>
 
         <View style={styles.detailsContainer}>
@@ -213,6 +265,37 @@ const TabHome = () => {
           </Text>
         </View>
       </View>
+
+      {/* Interest Selection Modal */}
+      <Modal
+        transparent={true}
+        visible={isInterestModalVisible}
+        animationType="slide"
+        onRequestClose={closeInterestModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Interests (Max 5)</Text>
+            <ScrollView>
+              {currentUser?.interests?.map((interest, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.interestButton,
+                    selectedInterests.includes(interest) && styles.selectedInterestButton,
+                  ]}
+                  onPress={() => handleInterestSelect(interest)}
+                >
+                  <Text style={styles.interestButtonText}>{interest}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity onPress={closeInterestModal} style={styles.modalCloseButton}>
+              <Text style={styles.modalCloseButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -220,7 +303,6 @@ const TabHome = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
   },
   scrollContainer: {
     flexGrow: 1,
@@ -248,7 +330,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   iconButton: {
-    // alignItems: 'center',
     padding: 10,
   },
   detailsContainer: {
@@ -261,12 +342,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: "#333",
   },
-
   noUsersText: {
     fontSize: 18,
     color: "#777",
   },
-
   sectionTitle: {
     fontSize: 14,
     fontWeight: "bold",
@@ -286,6 +365,45 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
     fontSize: 12,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "80%",
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  interestButton: {
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+  },
+  selectedInterestButton: {
+    backgroundColor: "#EC4899",
+  },
+  interestButtonText: {
+    textAlign: "center",
+  },
+  modalCloseButton: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#EC4899",
+    borderRadius: 5,
+  },
+  modalCloseButtonText: {
+    color: "white",
+    textAlign: "center",
   },
 });
 

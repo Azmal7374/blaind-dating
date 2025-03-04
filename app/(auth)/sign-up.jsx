@@ -1,3 +1,4 @@
+// app/sign-up.js
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, Alert, Image, ScrollView } from "react-native";
@@ -7,17 +8,17 @@ import { Ionicons } from "@expo/vector-icons";
 
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
-import { supabase } from '../../supabase';
+import { supabase } from "../../supabase";
 
 const SignUp = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // State for password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => {
-    setShowPassword(!showPassword); // Toggle password visibility
+    setShowPassword(!showPassword);
   };
 
   const handleSignUp = async () => {
@@ -30,10 +31,6 @@ const SignUp = () => {
       return;
     }
     try {
-      if (!supabase || !supabase.auth) {
-        throw new Error('Supabase client is not initialized.');
-      }
-
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -41,22 +38,18 @@ const SignUp = () => {
 
       if (error) throw error;
 
-      Alert.alert('Success', 'Check your email for the confirmation link!');
-      router.push('/sign-in');
+      Alert.alert("Success", "Check your email for the confirmation link!");
+      router.push("/sign-in");
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert("Error", error.message);
     }
-  };
-
-  let Image_Http_URL2 = {
-    uri: "https://img.freepik.com/premium-photo/asian-indian-young-indian-people-eating-restaurant-evening_466689-13660.jpg?ga=GA1.1.1056540666.1740382155&semt=ais_hybrid",
   };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView>
         <Animatable.Image
-          source={Image_Http_URL2}
+          source={{ uri: "https://img.freepik.com/premium-photo/asian-indian-young-indian-people-eating-restaurant-evening_466689-13660.jpg" }}
           style={{ height: 350, resizeMode: "cover", margin: 5 }}
           animation="fadeIn"
           duration={1500}
@@ -83,9 +76,9 @@ const SignUp = () => {
             handleChangeText={setPassword}
             otherStyles="mt-7"
             keyboardType="default"
-            secureTextEntry={!showPassword} // Toggle secureTextEntry
-            rightIcon={showPassword ? "eye-off" : "eye"} // Add eye icon
-            handleRightIconPress={toggleShowPassword} // Add toggle functionality
+            secureTextEntry={!showPassword}
+            rightIcon={showPassword ? "eye-off" : "eye"}
+            handleRightIconPress={toggleShowPassword}
           />
           <FormField
             title="Confirm Password"
@@ -93,9 +86,9 @@ const SignUp = () => {
             handleChangeText={setConfirmPassword}
             otherStyles="mt-7"
             keyboardType="default"
-            secureTextEntry={!showPassword} // Toggle secureTextEntry
-            rightIcon={showPassword ? "eye-off" : "eye"} // Add eye icon
-            handleRightIconPress={toggleShowPassword} // Add toggle functionality
+            secureTextEntry={!showPassword}
+            rightIcon={showPassword ? "eye-off" : "eye"}
+            handleRightIconPress={toggleShowPassword}
           />
 
           <Animatable.View animation="fadeInUp" duration={1500}>
