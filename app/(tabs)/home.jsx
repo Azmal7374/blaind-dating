@@ -9,41 +9,104 @@ import {
   Alert,
   Share,
   ScrollView,
-  Modal,
 } from "react-native";
 import axios from "axios";
 import * as Animatable from "react-native-animatable";
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { Feather, FontAwesome, Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-
+import { supabase } from '../../supabase';
 const { width, height } = Dimensions.get("window");
 
-const TabHome = ({ userId }) => {
-  const router = useRouter();
+const TabHome = () => {
   const [users, setUsers] = useState([]);
   const [currentUserIndex, setCurrentUserIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [likedUsers, setLikedUsers] = useState([]);
   const [dislikedUsers, setDislikedUsers] = useState([]);
-  const [selectedInterests, setSelectedInterests] = useState([]);
-  const [isInterestModalVisible, setIsInterestModalVisible] = useState(false);
   const imageRef = useRef(null);
+  const [userEmail, setUserEmail] = useState(null); 
+  const [loading, setLoading] = useState(true); 
+  const [currentUserData, setCurrentUserData] = useState(null); 
+
 
   useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) throw error;
+
+        if (session) {
+          setUserEmail(session.user.email); // Set the user's email
+        } else {
+          console.log("No user is currently logged in.");
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserEmail();
+  }, []);
+
+
+  useEffect(() => {
+    fetchCurrentUserData();
     fetchUsers();
-  }, [userId]);
+  }, [userEmail]);
+
+console.log(userEmail)
+  // Fetch current user's data
+  const fetchCurrentUserData = async () => {
+    try {
+      const response = await axios.get(`http://192.168.1.102:8000/api/users/current?email=${userEmail}`);
+      setCurrentUserData(response.data.user);
+    } catch (error) {
+      console.error("Error fetching current user data:", error);
+    }
+  };
+
+  console.log("Current users Data", currentUserData)
+
+  // const fetchUsers = async () => {
+  //   try {
+  //     const response = await axios.get("http://192.168.1.102:8000/api/users/");
+  //     setUsers(response.data.users);
+  //   } catch (error) {
+  //     console.error("Error fetching users:", error);
+  //   }
+  // };
+
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`http://192.168.1.102:8000/api/users?userId=${userId}`);
-      setUsers(response.data.users);
+      // Fetch all users
+      const response = await axios.get(`http://192.168.1.102:8000/api/users`);
+      const allUsers = response.data.users;
+  
+      // Fetch the current logged-in user's data
+      const currentUserResponse = await axios.get(
+        `http://192.168.1.102:8000/api/users/current?email=${userEmail}`
+      );
+      const currentUser = currentUserResponse.data.user;
+  
+      // Filter out the current logged-in user's data from the list
+      const filteredUsers = allUsers.filter(
+        (user) => user.email !== currentUser.email
+      );
+  
+      // Update the state with the filtered users
+      setUsers(filteredUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
+  
 
+// console.log("All Users", users)
   const currentUser = users[currentUserIndex];
   const currentImage = currentUser?.profile_pics?.[currentImageIndex]
     ? `http://192.168.1.102:8000/${currentUser.profile_pics[
@@ -51,35 +114,45 @@ const TabHome = ({ userId }) => {
       ].replace(/\\/g, "/")}`
     : "https://via.placeholder.com/150";
 
-  const handleLike = async () => {
-    try {
-      await axios.post("http://192.168.1.102:8000/api/matches", {
-        user1: userId,
-        user2: currentUser._id,
-        action: "like",
-      });
+    // const handleLike = async () => {
+    //   try {
+    //     await axios.post("http://192.168.1.102:8000/api/matches", {
+    //       user1: userId,
+    //       user2: currentUser._id,
+    //       action: "like",
+    //     });
+    //     setLikedUsers([...likedUsers, currentUser._id]);
+    //     moveToNextImage();
+    //   } catch (error) {
+    //     console.error("Error liking user:", error);
+    //   }
+    // };
+
+    // const handleDislike = async () => {
+    //   try {
+    //     await axios.post("http://192.168.1.102:8000/api/matches", {
+    //       user1: userId,
+    //       user2: currentUser._id,
+    //       action: "pass",
+    //     });
+    //     setDislikedUsers([...dislikedUsers, currentUser._id]);
+    //     moveToNextUser();
+    //   } catch (error) {
+    //     console.error("Error disliking user:", error);
+    //   }
+    // };
+
+    const handleLike = () => {
       setLikedUsers([...likedUsers, currentUser._id]);
       moveToNextImage();
-    } catch (error) {
-      console.error("Error liking user:", error);
     }
-  };
 
-  const handleDislike = async () => {
-    try {
-      await axios.post("http://192.168.1.102:8000/api/matches", {
-        user1: userId,
-        user2: currentUser._id,
-        action: "pass",
-      });
+    const handleDislike = () => {
       setDislikedUsers([...dislikedUsers, currentUser._id]);
       moveToNextUser();
-    } catch (error) {
-      console.error("Error disliking user:", error);
     }
-  };
 
-  const handleDownload = async () => {
+    const handleDownload = async () => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== "granted") {
@@ -115,7 +188,7 @@ const TabHome = ({ userId }) => {
         message: `Check out this profile: ${currentImage}`,
       });
     } catch (error) {
-      Alert.alert("Users End", "No More Users Remaining!!");
+      Alert.alert("Users End", "No More SUers Remaining!!");
     }
   };
 
@@ -147,42 +220,30 @@ const TabHome = ({ userId }) => {
     }
   }, [currentUserIndex, currentImageIndex]);
 
-  const handleInterestSelect = (interest) => {
-    if (selectedInterests.includes(interest)) {
-      setSelectedInterests(selectedInterests.filter((item) => item !== interest));
-    } else {
-      if (selectedInterests.length < 5) {
-        setSelectedInterests([...selectedInterests, interest]);
-      } else {
-        Alert.alert("Maximum Reached", "You can select up to 5 interests.");
-      }
-    }
-  };
-
-  const openInterestModal = () => {
-    setIsInterestModalVisible(true);
-  };
-
-  const closeInterestModal = () => {
-    setIsInterestModalVisible(false);
-  };
-
-  const filterUsersByInterests = () => {
-    if (selectedInterests.length === 0) return users;
-
-    return users.filter((user) =>
-      selectedInterests.some((interest) => user.interests.includes(interest))
-    );
-  };
-
   if (filteredUsers.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noUsersText}>No more users to show.</Text>
+      <View style={styles.noUsersContainer}>
+        {/* Icon */}
+        <Ionicons name="sad-outline" size={80} color="#EC4899" />
+  
+        {/* Title */}
+        <Text style={styles.noUsersTitle}>No more users to show</Text>
+  
+        {/* Subtitle */}
+        <Text style={styles.noUsersSubtitle}>
+          You've reached the end of the list. Check back later or refresh to see new profiles!
+        </Text>
+  
+        {/* Refresh Button */}
+        <TouchableOpacity
+          style={styles.refreshButton}
+          onPress={fetchUsers} // Call the fetchUsers function to refresh the list
+        >
+          <Text style={styles.refreshButtonText}>Refresh</Text>
+        </TouchableOpacity>
       </View>
     );
   }
-
   const getDetailsForImage = (index, user) => {
     const interests = Array.isArray(user.interests)
       ? user.interests
@@ -207,7 +268,10 @@ const TabHome = ({ userId }) => {
       case 1:
         return (
           <View>
-            <Text style={styles.sectionTitle}> {user?.distance}160  centimeter </Text>
+            <Text style={styles.sectionTitle}>
+              {" "}
+              {user?.distance}160 centemeter{" "}
+            </Text>
             <Text style={styles.sectionTitle}>
               {user.university || "University Of Croland"}
             </Text>
@@ -219,7 +283,9 @@ const TabHome = ({ userId }) => {
             <Text style={styles.sectionTitle}>Personality Traits</Text>
             <View style={styles.interestsContainer}>
               {personalityTraits.map((trait, index) => (
-                <Text key={index} style={styles.interestTag}>{trait}</Text>
+                <Text key={index} style={styles.interestTag}>
+                  {trait}
+                </Text>
               ))}
             </View>
           </View>
@@ -233,16 +299,19 @@ const TabHome = ({ userId }) => {
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         <Animatable.View ref={imageRef} style={styles.imageContainer}>
-          <Image className="mt-8" source={{ uri: currentImage }} style={styles.storyImage} />
+          <Image
+            className="mt-8"
+            source={{ uri: currentImage }}
+            style={styles.storyImage}
+          />
         </Animatable.View>
 
-        <View style={styles.iconsContainer} className="flex justify-center items-center">
+        <View
+          style={styles.iconsContainer}
+          className="flex justify-center items-center"
+        >
           <TouchableOpacity onPress={handleDislike} style={styles.iconButton}>
             <FontAwesome name="times-circle" size={40} color="#EC4899" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={openInterestModal} style={styles.iconButton}>
-            <Ionicons name="filter" size={40} color="#EC4899" />
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleShare} style={styles.iconButton}>
@@ -260,42 +329,16 @@ const TabHome = ({ userId }) => {
 
         <View style={styles.detailsContainer}>
           <Text style={styles.name}>{currentUser?.name}</Text>
+          {userEmail && (
+            <Text className="text-gray-500 text-sm mt-2">
+              Logged in as: {userEmail}
+            </Text>
+          )}
           <Text className="text-start">
             {getDetailsForImage(currentImageIndex, currentUser)}
           </Text>
         </View>
       </View>
-
-      {/* Interest Selection Modal */}
-      <Modal
-        transparent={true}
-        visible={isInterestModalVisible}
-        animationType="slide"
-        onRequestClose={closeInterestModal}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Interests (Max 5)</Text>
-            <ScrollView>
-              {currentUser?.interests?.map((interest, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.interestButton,
-                    selectedInterests.includes(interest) && styles.selectedInterestButton,
-                  ]}
-                  onPress={() => handleInterestSelect(interest)}
-                >
-                  <Text style={styles.interestButtonText}>{interest}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity onPress={closeInterestModal} style={styles.modalCloseButton}>
-              <Text style={styles.modalCloseButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </ScrollView>
   );
 };
@@ -330,6 +373,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   iconButton: {
+    // alignItems: 'center',
     padding: 10,
   },
   detailsContainer: {
@@ -342,10 +386,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: "#333",
   },
-  noUsersText: {
-    fontSize: 18,
-    color: "#777",
-  },
+
+  
   sectionTitle: {
     fontSize: 14,
     fontWeight: "bold",
@@ -366,44 +408,43 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 12,
   },
-  modalContainer: {
+  noUsersContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    width: "80%",
-    backgroundColor: "white",
-    borderRadius: 10,
     padding: 20,
+    backgroundColor: "#f5f5f5",
   },
-  modalTitle: {
-    fontSize: 18,
+  noUsersTitle: {
+    fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
-  },
-  interestButton: {
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
-  },
-  selectedInterestButton: {
-    backgroundColor: "#EC4899",
-  },
-  interestButtonText: {
+    color: "#333",
+    marginTop: 20,
     textAlign: "center",
   },
-  modalCloseButton: {
+  noUsersSubtitle: {
+    fontSize: 16,
+    color: "#666",
     marginTop: 10,
-    padding: 10,
-    backgroundColor: "#EC4899",
-    borderRadius: 5,
-  },
-  modalCloseButtonText: {
-    color: "white",
     textAlign: "center",
+    lineHeight: 24,
+  },
+  refreshButton: {
+    marginTop: 30,
+    backgroundColor: "#EC4899",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    elevation: 3, // Shadow for Android
+    shadowColor: "#000", // Shadow for iOS
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  refreshButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 
