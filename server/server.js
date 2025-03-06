@@ -26,7 +26,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/users', userRoutes);
-app.use('/api/matches', matchRoutes);
+app.use('/api/match', matchRoutes);
 app.use('/api/chat', chatRoutes);
 
 // Default route

@@ -50,6 +50,7 @@ const RegisterScreen = () => {
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("");
   const [country, setCountry] = useState("");
+  const [university, setUniversity] = useState("");
   const [dob, setDob] = useState({ day: "", month: "", year: "" });
   const [bio, setBio] = useState("");
   const [lookingFor, setLookingFor] = useState("");
@@ -120,10 +121,12 @@ const RegisterScreen = () => {
     formData.append("email", email);
     formData.append("gender", gender);
     formData.append("country", country);
+    formData.append("university", university);
     formData.append("dob", `${dob.year}-${dob.month}-${dob.day}`);
     formData.append("bio", bio);
     formData.append("looking_for", lookingFor);
     formData.append("personalityTraits", personalityTraits);
+    formData.append("interests", interests);
 
     profilePics.forEach((pic, index) => {
       const uriParts = pic.split(".");
@@ -404,6 +407,15 @@ const RegisterScreen = () => {
           placeholder="Country"
           value={country}
           onChangeText={setCountry}
+        />
+      </Animatable.View>
+      {/* University Input */}
+      <Animatable.View animation="fadeInDown" duration={1000} delay={800}>
+        <TextInput
+          style={styles.input}
+          placeholder="University"
+          value={university}
+          onChangeText={setUniversity}
         />
       </Animatable.View>
 

@@ -28,7 +28,7 @@ const TabHome = () => {
   const [userEmail, setUserEmail] = useState(null); 
   const [loading, setLoading] = useState(true); 
   const [currentUserData, setCurrentUserData] = useState(null); 
-
+  // const [filteredUsers, setFilteredUsers] = useState([]);
 
   useEffect(() => {
     const fetchUserEmail = async () => {
@@ -47,18 +47,31 @@ const TabHome = () => {
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     fetchUserEmail();
   }, []);
 
 
   useEffect(() => {
-    fetchCurrentUserData();
-    fetchUsers();
+    const fetchData = async () => {
+      if (!userEmail) {
+        console.log("User email is not available yet.");
+        return;
+      }
+  
+      try {
+        await fetchCurrentUserData();
+        await fetchUsers();
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchData();
   }, [userEmail]);
 
-console.log(userEmail)
   // Fetch current user's data
   const fetchCurrentUserData = async () => {
     try {
@@ -69,7 +82,7 @@ console.log(userEmail)
     }
   };
 
-  console.log("Current users Data", currentUserData)
+  // console.log("Current users Data", currentUserData)
 
   // const fetchUsers = async () => {
   //   try {
@@ -114,44 +127,64 @@ console.log(userEmail)
       ].replace(/\\/g, "/")}`
     : "https://via.placeholder.com/150";
 
-    // const handleLike = async () => {
-    //   try {
-    //     await axios.post("http://192.168.1.102:8000/api/matches", {
-    //       user1: userId,
-    //       user2: currentUser._id,
-    //       action: "like",
-    //     });
-    //     setLikedUsers([...likedUsers, currentUser._id]);
-    //     moveToNextImage();
-    //   } catch (error) {
-    //     console.error("Error liking user:", error);
-    //   }
-    // };
+    
+    const handleLike = async () => {
+      try {
+        if (!currentUserData || !currentUserData._id || !currentUser || !currentUser._id) {
+          console.error("Current user data or ID is missing.");
+          Alert.alert("Error", "User data is missing. Please try again.");
+          return;
+        }
+    
+    
+        const response = await axios.post("http://192.168.1.102:8000/api/match/matches", {
+          user1: currentUserData._id,
+          user2: currentUser._id,
+          action: "like",
+        });
+    
+    
+        if (response.data.message === 'Compatibility score too low. Match not saved.') {
+          // Alert.alert("Info", "Compatibility score too low. Match not saved.");
+        } else {
+          setLikedUsers([...likedUsers, currentUser._id]);
+        }
+      } catch (error) {
+        console.error("Error:", error.response?.data || error.message);
+        Alert.alert("Error", "Failed to like user. Please try again.");
+      } finally {
+        moveToNextImage();
+      }
+    };
 
-    // const handleDislike = async () => {
-    //   try {
-    //     await axios.post("http://192.168.1.102:8000/api/matches", {
-    //       user1: userId,
-    //       user2: currentUser._id,
-    //       action: "pass",
-    //     });
-    //     setDislikedUsers([...dislikedUsers, currentUser._id]);
-    //     moveToNextUser();
-    //   } catch (error) {
-    //     console.error("Error disliking user:", error);
-    //   }
-    // };
 
-    const handleLike = () => {
-      setLikedUsers([...likedUsers, currentUser._id]);
-      moveToNextImage();
-    }
+    const handleDislike = async () => {
+      try {
+        if (!currentUserData || !currentUserData._id || !currentUser || !currentUser._id) {
+          console.error("Current user data or ID is missing.");
+          Alert.alert("Error", "User data is missing. Please try again.");
+          return;
+        }
 
-    const handleDislike = () => {
-      setDislikedUsers([...dislikedUsers, currentUser._id]);
-      moveToNextUser();
-    }
-
+        const response = await axios.post("http://192.168.1.102:8000/api/match/matches", {
+          user1: currentUserData._id,
+          user2: currentUser._id,
+          action: "pass", // Use "pass" for dislike
+        });
+    
+        setDislikedUsers([...dislikedUsers, currentUser._id]);
+    
+        // Show a success message (optional)
+        Alert.alert("Disliked", "User has been disliked.");
+      } catch (error) {
+        console.error("Error:", error.response?.data || error.message);
+        Alert.alert("Error", "Failed to dislike user. Please try again.");
+      } finally {
+        moveToNextUser();
+      }
+    };
+    
+    
     const handleDownload = async () => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -223,27 +256,32 @@ console.log(userEmail)
   if (filteredUsers.length === 0) {
     return (
       <View style={styles.noUsersContainer}>
-        {/* Icon */}
         <Ionicons name="sad-outline" size={80} color="#EC4899" />
-  
-        {/* Title */}
         <Text style={styles.noUsersTitle}>No more users to show</Text>
   
-        {/* Subtitle */}
         <Text style={styles.noUsersSubtitle}>
           You've reached the end of the list. Check back later or refresh to see new profiles!
         </Text>
   
-        {/* Refresh Button */}
         <TouchableOpacity
           style={styles.refreshButton}
-          onPress={fetchUsers} // Call the fetchUsers function to refresh the list
+          onPress={fetchUsers} 
         >
           <Text style={styles.refreshButtonText}>Refresh</Text>
         </TouchableOpacity>
       </View>
     );
   }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+
   const getDetailsForImage = (index, user) => {
     const interests = Array.isArray(user.interests)
       ? user.interests
